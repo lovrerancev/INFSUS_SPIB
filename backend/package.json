@@ -1,0 +1,33 @@
+{
+  "name": "spib-backend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run tests/unit",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.1",
+    "bcrypt": "^6.0.0",
+    "dotenv": "^16.4.5",
+    "fastify": "^5.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^22.10.0",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^3.1.4"
+  }
+}

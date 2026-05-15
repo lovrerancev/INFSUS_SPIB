@@ -1,0 +1,21 @@
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: spib-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-spib}
+      POSTGRES_USER: ${POSTGRES_USER:-spib}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-spib_dev_promijeni_me}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - spib_pgdata:/var/lib/postgresql/data
+      - ./database/SPIB_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./database/SPIB_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+      - ./database/SPIB_patch_administrator.sql:/docker-entrypoint-initdb.d/03_patch_administrator.sql:ro
+      - ./database/SPIB_patch_narudzba_datum_zavrsetka.sql:/docker-entrypoint-initdb.d/04_patch_narudzba_datum_zavrsetka.sql:ro
+
+volumes:
+  spib_pgdata:
