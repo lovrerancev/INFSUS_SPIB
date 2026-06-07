@@ -53,7 +53,6 @@ export function requireKupac(request: FastifyRequest): AuthUser {
   return u;
 }
 
-/** Katalog (javni pregled) — administrator ne smije. */
 export function forbidAdministratorKatalog(request: FastifyRequest): void {
   const u = tryAuthUser(request);
   if (u?.role === "administrator") {

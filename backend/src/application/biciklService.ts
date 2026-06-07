@@ -38,7 +38,6 @@ export class BiciklService {
     if (n > 0) throw new Error("VALIDATION: inventarni broj već postoji (druga skladišna jedinica)");
   }
 
-  /** Nova vrsta (model) u katalogu — bez jedinica; jedinice dodajte posebno. */
   async createVrsta(body: {
     naziv: string;
     cijena: string;

@@ -63,6 +63,33 @@ export class NarudzbaRepository {
     return res.rows;
   }
 
+  async findAllCekaAdmin(limit = 50): Promise<NarudzbaListRow[]> {
+    const res = await pool.query<NarudzbaListRow>(
+      `SELECT n.narudzba_id,
+              n.datum::text AS datum,
+              n.status,
+              n.adresa_dostave,
+              n.nacin_placanja,
+              n.prodaja_obradena,
+              n.kupac_korisnik_id,
+              n.djelatnik_korisnik_id,
+              k.ime AS kupac_ime,
+              k.prezime AS kupac_prezime,
+              kd.ime AS djelatnik_ime,
+              kd.prezime AS djelatnik_prezime
+       FROM narudzba n
+       JOIN kupac ku ON ku.korisnik_id = n.kupac_korisnik_id
+       JOIN korisnik k ON k.korisnik_id = ku.korisnik_id
+       LEFT JOIN djelatnik dj ON dj.korisnik_id = n.djelatnik_korisnik_id
+       LEFT JOIN korisnik kd ON kd.korisnik_id = dj.korisnik_id
+       WHERE n.status = 'CEKA_ADMIN'
+       ORDER BY n.datum ASC
+       LIMIT $1`,
+      [limit],
+    );
+    return res.rows;
+  }
+
   async findByIdWithStavke(id: number): Promise<NarudzbaDetaljRow | null> {
     type Head = {
       narudzba_id: number;
@@ -195,10 +222,6 @@ export class NarudzbaRepository {
     }
   }
 
-  /**
-   * Ažuriranje zaglavlja; prvi prijelaz u POTVRDJENA (potvrda), ZAVRSENA ili U_OBRADI u istoj transakciji
-   * primjenjuje prodaju (zaliha + status jedinice) i postavlja prodaja_obradena + datum_zavrsetka za izvještaj.
-   */
   async updateNarudzba(
     id: number,
     patch: {

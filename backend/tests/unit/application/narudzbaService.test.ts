@@ -152,8 +152,52 @@ describe("NarudzbaService", () => {
     const s = new NarudzbaService(repo);
     await expect(
       s.update(1, { status: "ZAVRSENA" }, { korisnik_id: 1, role: "djelatnik" }),
-    ).rejects.toThrow(/Potvrđena/);
+    ).rejects.toThrow(/Potvrđena|Čeka administratora/);
     expect(repo.updateNarudzba).not.toHaveBeenCalled();
+  });
+
+  it("update: djelatnik eskalira NOVA → CEKA_ADMIN", async () => {
+    const row = mkDetalj();
+    const nakon = mkDetalj({ status: "CEKA_ADMIN", djelatnik_korisnik_id: 3 });
+    const findByIdWithStavke = vi.fn().mockResolvedValueOnce(row).mockResolvedValueOnce(nakon);
+    const updateNarudzba = vi.fn().mockResolvedValue(true);
+    const repo = { findByIdWithStavke, updateNarudzba } as unknown as NarudzbaRepository;
+    const s = new NarudzbaService(repo);
+    const r = await s.update(1, { status: "CEKA_ADMIN" }, { korisnik_id: 3, role: "djelatnik" });
+    expect(updateNarudzba).toHaveBeenCalledWith(1, { status: "CEKA_ADMIN", djelatnik_korisnik_id: 3 });
+    expect(r?.status).toBe("CEKA_ADMIN");
+  });
+
+  it("update: administrator otkazuje CEKA_ADMIN", async () => {
+    const row = mkDetalj({ status: "CEKA_ADMIN" });
+    const nakon = mkDetalj({ status: "OTKAZANA" });
+    const findByIdWithStavke = vi.fn().mockResolvedValueOnce(row).mockResolvedValueOnce(nakon);
+    const updateNarudzba = vi.fn().mockResolvedValue(true);
+    const repo = { findByIdWithStavke, updateNarudzba } as unknown as NarudzbaRepository;
+    const s = new NarudzbaService(repo);
+    const r = await s.update(1, { status: "OTKAZANA" }, { korisnik_id: 1, role: "administrator" });
+    expect(updateNarudzba).toHaveBeenCalledWith(1, { status: "OTKAZANA" });
+    expect(r?.status).toBe("OTKAZANA");
+  });
+
+  it("update: kupac ispravlja NA_DORADI → NOVA", async () => {
+    const row = mkDetalj({ status: "NA_DORADI", kupac_korisnik_id: 7 });
+    const nakon = mkDetalj({ status: "NOVA", adresa_dostave: "Ilica 15, Zagreb" });
+    const findByIdWithStavke = vi.fn().mockResolvedValueOnce(row).mockResolvedValueOnce(nakon);
+    const updateNarudzba = vi.fn().mockResolvedValue(true);
+    const repo = { findByIdWithStavke, updateNarudzba } as unknown as NarudzbaRepository;
+    const s = new NarudzbaService(repo);
+    const r = await s.update(
+      1,
+      { adresa_dostave: "Ilica 15, Zagreb", nacin_placanja: "KARTICA" },
+      { korisnik_id: 7, role: "kupac" },
+    );
+    expect(updateNarudzba).toHaveBeenCalledWith(1, {
+      adresa_dostave: "Ilica 15, Zagreb",
+      nacin_placanja: "KARTICA",
+      status: "NOVA",
+    });
+    expect(r?.status).toBe("NOVA");
   });
 
   it("update: djelatnik ne smije mijenjati adresu", async () => {
@@ -162,17 +206,17 @@ describe("NarudzbaService", () => {
     const s = new NarudzbaService(repo);
     await expect(
       s.update(1, { status: "POTVRDJENA", adresa_dostave: "X" }, { korisnik_id: 1, role: "djelatnik" }),
-    ).rejects.toThrow(/potvrditi/);
+    ).rejects.toThrow(/promijeniti status/);
     expect(repo.updateNarudzba).not.toHaveBeenCalled();
   });
 
-  it("update zaglavlja odbija kupca", async () => {
-    const row = mkDetalj();
+  it("update zaglavlja odbija kupca kad nije NA_DORADI", async () => {
+    const row = mkDetalj({ status: "NOVA" });
     const repo = { findByIdWithStavke: vi.fn().mockResolvedValue(row), updateNarudzba: vi.fn() } as unknown as NarudzbaRepository;
     const s = new NarudzbaService(repo);
     await expect(
-      s.update(1, { adresa_dostave: "Nova" }, { korisnik_id: 7, role: "kupac" }),
-    ).rejects.toThrow(/samo pregled/);
+      s.update(1, { adresa_dostave: "Ilica 15, Zagreb" }, { korisnik_id: 7, role: "kupac" }),
+    ).rejects.toThrow(/doradu/);
     expect(repo.updateNarudzba).not.toHaveBeenCalled();
   });
 });

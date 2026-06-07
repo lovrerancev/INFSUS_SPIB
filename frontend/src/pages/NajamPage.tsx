@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, apiJson } from "../lib/api";
 
-/** Jedna fizička jedinica za najam (iz kataloga jedinica). */
 type JedinicaNajam = {
   jedinica_id: number;
   bicikl_id: number;

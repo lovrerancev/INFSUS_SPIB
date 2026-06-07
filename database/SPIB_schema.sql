@@ -69,7 +69,7 @@ CREATE TABLE Narudzba (
     datum TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(30) NOT NULL
         CONSTRAINT chk_narudzba_status
-        CHECK (status IN ('NOVA', 'POTVRDJENA', 'U_OBRADI', 'ZAVRSENA', 'OTKAZANA')),
+        CHECK (status IN ('NOVA', 'POTVRDJENA', 'U_OBRADI', 'ZAVRSENA', 'OTKAZANA', 'CEKA_ADMIN', 'NA_DORADI')),
     adresa_dostave VARCHAR(500) NOT NULL DEFAULT '',
     nacin_placanja VARCHAR(30) NOT NULL DEFAULT 'POUZEĆE'
         CONSTRAINT chk_nacin_placanja

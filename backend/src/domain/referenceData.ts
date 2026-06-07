@@ -1,4 +1,3 @@
-/** Read-only redci za padajuće liste u UI-ju (Faza C). */
 
 export type KupacOption = {
   korisnik_id: number;

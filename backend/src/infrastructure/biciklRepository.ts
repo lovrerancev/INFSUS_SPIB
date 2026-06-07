@@ -97,7 +97,6 @@ export class BiciklRepository {
     return res.rows;
   }
 
-  /** Pojedinačne jedinice (najam, detalj admina). */
   async findJediniceKatalog(f: JediniceKatalogFilter): Promise<BiciklJedinicaRow[]> {
     const cond: string[] = ["1=1"];
     const vals: unknown[] = [];
@@ -238,10 +237,6 @@ export class BiciklRepository {
     return (res.rowCount ?? 0) > 0;
   }
 
-  /**
-   * Briše jedinicu zajedno s povezanim stavkama narudžbe, najmovima i zapisima plaćanja najma.
-   * Koristi se samo uz eksplicitni „force“ u admin API-ju.
-   */
   async deleteJedinicaCascade(jedinicaId: number): Promise<void> {
     const client = await pool.connect();
     try {
@@ -267,7 +262,6 @@ export class BiciklRepository {
     }
   }
 
-  /** Briše sve jedinice vrste (kaskadno) pa red vrste u bicikl. */
   async deleteVrstaCascade(vrstaId: number): Promise<void> {
     const client = await pool.connect();
     try {

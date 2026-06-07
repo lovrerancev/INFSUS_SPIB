@@ -27,7 +27,6 @@ export default function KatalogPage() {
   const [q, setQ] = useState("");
   const [cijenaOd, setCijenaOd] = useState("");
   const [cijenaDo, setCijenaDo] = useState("");
-  /** Samo za djelatnika: kupci i gosti uvijek vide samo jedinice koje se stvarno mogu naručiti. */
   const [djelatnikSamoDostupni, setDjelatnikSamoDostupni] = useState(false);
   const [rows, setRows] = useState<BiciklKatalog[]>([]);
   const [greska, setGreska] = useState<string | null>(null);

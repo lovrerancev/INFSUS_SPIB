@@ -61,6 +61,14 @@ export default function Layout() {
             Katalog
           </NavLink>
         )}
+        {user && (
+          <NavLink
+            to="/proces-narudzbe"
+            className={({ isActive }) => (isActive ? "nav-a nav-a--aktivno" : "nav-a")}
+          >
+            Proces (Camunda)
+          </NavLink>
+        )}
         {user?.role === "kupac" && (
           <NavLink to="/kupnja" className={({ isActive }) => (isActive ? "nav-a nav-a--aktivno" : "nav-a")}>
             Kupnja
@@ -80,6 +88,12 @@ export default function Layout() {
           <>
             <NavLink to="/admin" className={({ isActive }) => (isActive ? "nav-a nav-a--aktivno" : "nav-a")}>
               Administracija
+            </NavLink>
+            <NavLink
+              to="/obrada-narudzbi"
+              className={({ isActive }) => (isActive ? "nav-a nav-a--aktivno" : "nav-a")}
+            >
+              Obrada narudžbi
             </NavLink>
             <NavLink to="/izvjestaji" className={({ isActive }) => (isActive ? "nav-a nav-a--aktivno" : "nav-a")}>
               Izvještaji

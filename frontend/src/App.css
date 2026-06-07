@@ -1,5 +1,3 @@
-/* SPIB — Faza C, vizualni sloj */
-
 .spib {
   --spib-ink: #0f172a;
   --spib-muted: #64748b;
@@ -26,7 +24,6 @@
   max-width: 1120px;
 }
 
-/* Reset Vite/global naslova unutar aplikacije */
 .spib h1,
 .spib h2,
 .spib h3,
@@ -439,7 +436,6 @@
   margin-bottom: 0.5rem;
 }
 
-/* Početna */
 .pocetna-uvod {
   max-width: 36rem;
   margin: 0 0 1.75rem;

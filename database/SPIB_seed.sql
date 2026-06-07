@@ -1,7 +1,3 @@
--- =============================================================================
--- SPIB – ogledni podaci (nakon SPIB_schema.sql)
--- bicikl = vrsta; bicikl_jedinica = pojedinačne jedinice
--- =============================================================================
 
 INSERT INTO Korisnik (ime, prezime, email, lozinka) VALUES
     ('Iva', 'Ivić', 'iva.narucitelj@spi.local', '$2b$10$YOsmUNorzlfMXi2mSfg.mOe5Mik0Ngq5EftaJ.GFsr9IADpFSzf2e'),

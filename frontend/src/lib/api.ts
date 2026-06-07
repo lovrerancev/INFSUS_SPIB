@@ -1,4 +1,3 @@
-/** Jednostavan fetch wrapper za JSON API + JWT (SPIB). */
 
 const TOKEN_KEY = "spib_jwt";
 

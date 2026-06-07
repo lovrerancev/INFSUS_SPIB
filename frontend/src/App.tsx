@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
+import AdminNarudzbePage from "./pages/AdminNarudzbePage";
 import AdminPage from "./pages/AdminPage";
 import BicikliAdminPage from "./pages/BicikliAdminPage";
 import HomePage from "./pages/HomePage";
@@ -11,6 +12,7 @@ import LoginPage from "./pages/LoginPage";
 import NajamPage from "./pages/NajamPage";
 import NajmoviPage from "./pages/NajmoviPage";
 import NarudzbePage from "./pages/NarudzbePage";
+import ProcesNarudzbePage from "./pages/ProcesNarudzbePage";
 import RegisterPage from "./pages/RegisterPage";
 import "./App.css";
 
@@ -26,10 +28,12 @@ export default function App() {
           <Route path="narudzbe" element={<NarudzbePage />} />
           <Route path="bicikli-admin" element={<BicikliAdminPage />} />
           <Route path="admin" element={<AdminPage />} />
+          <Route path="obrada-narudzbi" element={<AdminNarudzbePage />} />
           <Route path="najmovi" element={<NajmoviPage />} />
           <Route path="izvjestaji" element={<IzvjestajiPage />} />
           <Route path="kategorije" element={<KategorijePage />} />
           <Route path="prijava" element={<LoginPage />} />
+          <Route path="proces-narudzbe" element={<ProcesNarudzbePage />} />
           <Route path="registracija" element={<RegisterPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

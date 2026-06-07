@@ -172,8 +172,9 @@ export default function KupnjaPage() {
               value={adresa}
               onChange={(e) => setAdresa(e.target.value)}
               required
-              placeholder="Ulica, broj, grad, poštanski broj…"
+              placeholder="npr. Ilica 15, 10000 Zagreb (ulica, broj, mjesto — min. 15 znakova)"
             />
+            <p className="hint">Adresa mora sadržavati kućni broj i pun naziv mjesta (provjera pri slanju).</p>
           </label>
           <label>
             Način plaćanja

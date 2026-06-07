@@ -53,7 +53,6 @@ export type StavkaCreateDto = {
   kolicina: number;
 };
 
-/** Ulaz: izmjena stavke */
 export type StavkaUpdateDto = {
   jedinica_id?: number;
   kolicina?: number;

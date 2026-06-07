@@ -1,4 +1,3 @@
-/** Kanonski statusi bicikla (FZ-06) — usklađeno s CHECK u bazi. */
 export const BICIKL_STATUSI = [
   "DOSTUPAN",
   "IZNAJMLJEN",

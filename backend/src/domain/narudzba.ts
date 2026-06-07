@@ -1,4 +1,3 @@
-/** Redak stavke iz baze (repozitorij) */
 export type StavkaNarudzbeRow = {
   stavka_id: number;
   kolicina: number;

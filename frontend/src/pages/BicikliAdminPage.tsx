@@ -3,7 +3,6 @@ import { useAuth } from "../context/AuthContext";
 import { ApiError, apiJson, apiVoid } from "../lib/api";
 import { statusBicikla } from "../lib/biciklStatus";
 
-/** Agregat vrste (model) iz kataloga. */
 type Vrsta = {
   bicikl_id: number;
   inventarni_broj: string;

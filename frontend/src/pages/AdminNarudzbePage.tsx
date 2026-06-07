@@ -21,14 +21,11 @@ type Stavka = {
   kolicina: number;
   cijena: string;
   jedinica_id: number;
-  narudzba_id: number;
   bicikl_naziv: string | null;
   bicikl_inventarni_broj: string | null;
 };
 
-type NarudzbaDetalj = NarudzbaList & {
-  stavke: Stavka[];
-};
+type NarudzbaDetalj = NarudzbaList & { stavke: Stavka[] };
 
 type NarudzbaStatusOpcija = { kod: string; naziv: string };
 
@@ -43,7 +40,7 @@ function statusPrikaz(kod: string, statusi: NarudzbaStatusOpcija[]) {
   return s ? s.naziv : kod;
 }
 
-export default function NarudzbePage() {
+export default function AdminNarudzbePage() {
   const { user } = useAuth();
   const [lista, setLista] = useState<NarudzbaList[]>([]);
   const [statusi, setStatusi] = useState<NarudzbaStatusOpcija[]>([]);
@@ -51,11 +48,7 @@ export default function NarudzbePage() {
   const [detalj, setDetalj] = useState<NarudzbaDetalj | null>(null);
   const [greska, setGreska] = useState<string | null>(null);
   const [loadDetalj, setLoadDetalj] = useState(0);
-
-  const [potvrdaUcitavanje, setPotvrdaUcitavanje] = useState(false);
-  const [ispravakAdresa, setIspravakAdresa] = useState("");
-  const [ispravakNacin, setIspravakNacin] = useState("POUZEĆE");
-  const [ispravakUcitavanje, setIspravakUcitavanje] = useState(false);
+  const [radnjaUcitavanje, setRadnjaUcitavanje] = useState(false);
 
   const loadSifre = useCallback(async () => {
     const st = await apiJson<NarudzbaStatusOpcija[]>("/api/narudzbe/statusi");
@@ -68,6 +61,7 @@ export default function NarudzbePage() {
   }, []);
 
   useEffect(() => {
+    if (user?.role !== "administrator") return;
     let o = false;
     setGreska(null);
     (async () => {
@@ -81,7 +75,7 @@ export default function NarudzbePage() {
     return () => {
       o = true;
     };
-  }, [loadLista, loadSifre]);
+  }, [user, loadLista, loadSifre]);
 
   useEffect(() => {
     if (selectedId == null) {
@@ -93,13 +87,7 @@ export default function NarudzbePage() {
     (async () => {
       try {
         const d = await apiJson<NarudzbaDetalj>(`/api/narudzbe/${selectedId}`);
-        if (!o) {
-          setDetalj(d);
-          if (d.status === "NA_DORADI") {
-            setIspravakAdresa(d.adresa_dostave);
-            setIspravakNacin(d.nacin_placanja);
-          }
-        }
+        if (!o) setDetalj(d);
       } catch (e) {
         if (!o) setGreska(e instanceof ApiError ? e.message : "Greška detalja");
       }
@@ -109,10 +97,10 @@ export default function NarudzbePage() {
     };
   }, [selectedId, loadDetalj]);
 
-  async function promijeniStatus(status: "POTVRDJENA" | "CEKA_ADMIN") {
-    if (selectedId == null || !detalj) return;
+  async function odluka(status: "OTKAZANA" | "NA_DORADI") {
+    if (selectedId == null) return;
     setGreska(null);
-    setPotvrdaUcitavanje(true);
+    setRadnjaUcitavanje(true);
     try {
       await apiJson<NarudzbaDetalj>(`/api/narudzbe/${selectedId}`, {
         method: "PATCH",
@@ -121,48 +109,36 @@ export default function NarudzbePage() {
       });
       setLoadDetalj((x) => x + 1);
       await loadLista();
+      if (status === "OTKAZANA" || status === "NA_DORADI") {
+        setSelectedId(null);
+      }
     } catch (e) {
       setGreska(e instanceof ApiError ? e.message : "Greška");
     } finally {
-      setPotvrdaUcitavanje(false);
+      setRadnjaUcitavanje(false);
     }
   }
 
-  async function posaljiIspravak(e: React.FormEvent) {
-    e.preventDefault();
-    if (selectedId == null || !detalj) return;
-    setGreska(null);
-    setIspravakUcitavanje(true);
-    try {
-      await apiJson<NarudzbaDetalj>(`/api/narudzbe/${selectedId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          adresa_dostave: ispravakAdresa.trim(),
-          nacin_placanja: ispravakNacin,
-        }),
-      });
-      setLoadDetalj((x) => x + 1);
-      await loadLista();
-    } catch (e) {
-      setGreska(e instanceof ApiError ? e.message : "Greška ispravka");
-    } finally {
-      setIspravakUcitavanje(false);
-    }
+  if (user?.role !== "administrator") {
+    return (
+      <div className="panel">
+        <p>Obrada eskaliranih narudžbi dostupna je samo administratoru.</p>
+      </div>
+    );
   }
 
   return (
     <div className="grid-dva">
       <section className="panel">
         <div className="panel-head">
-          <h2>Narudžbe</h2>
+          <h2>Eskalirane narudžbe</h2>
         </div>
         <p className="hint">
-          Novu narudžbu kupnje kreirate na stranici <strong>Kupnja</strong>. Rezervacija najma ide preko{" "}
-          <strong>Najam</strong> (nije narudžba kupnje).
+          Djelatnik je označio problem s adresom. Odlučite: otkazati narudžbu ili vratiti kupcu na ispravak.
         </p>
-        {!user && <p className="hint">Za pregled vlastitih narudžbi prijavite se kao kupac.</p>}
+        {greska && <p className="greska">{greska}</p>}
         <ul className="lista-nar">
+          {lista.length === 0 && <li className="hint">Nema narudžbi koje čekaju odluku.</li>}
           {lista.map((n) => (
             <li key={n.narudzba_id}>
               <button
@@ -173,14 +149,6 @@ export default function NarudzbePage() {
                 <span className="lista-nar__id">#{n.narudzba_id}</span>
                 <span className="lista-nar__meta">
                   {statusPrikaz(n.status, statusi)} · {n.kupac_prezime} {n.kupac_ime}
-                  {n.djelatnik_prezime != null &&
-                    n.djelatnik_ime != null &&
-                    n.djelatnik_korisnik_id != null && (
-                    <>
-                      {" "}
-                      · potvrdio/la {n.djelatnik_prezime} {n.djelatnik_ime}
-                    </>
-                  )}
                 </span>
                 <span className="lista-nar__dat">{n.datum}</span>
               </button>
@@ -190,9 +158,8 @@ export default function NarudzbePage() {
       </section>
 
       <section className="panel panel--siroko">
-        <h2>Detalj</h2>
-        {greska && <p className="greska">{greska}</p>}
-        {!selectedId && <p className="hint">Odaberi narudžbu s lijeve strane.</p>}
+        <h2>Odluka administratora</h2>
+        {!selectedId && <p className="hint">Odaberite narudžbu s lijeve strane.</p>}
         {selectedId != null && !detalj && <p>Učitavanje…</p>}
         {detalj && (
           <>
@@ -207,89 +174,38 @@ export default function NarudzbePage() {
                 <strong>Status:</strong> {statusPrikaz(detalj.status, statusi)}
               </p>
               <p>
-                <strong>Djelatnik (potvrda):</strong>{" "}
-                {detalj.djelatnik_korisnik_id != null &&
-                detalj.djelatnik_ime != null &&
-                detalj.djelatnik_prezime != null
-                  ? `${detalj.djelatnik_prezime}, ${detalj.djelatnik_ime} (#${detalj.djelatnik_korisnik_id})`
-                  : "—"}
-              </p>
-              <p>
                 <strong>Adresa dostave:</strong> {detalj.adresa_dostave}
               </p>
               <p>
                 <strong>Način plaćanja:</strong>{" "}
                 {NACINI.find((x) => x.v === detalj.nacin_placanja)?.l ?? detalj.nacin_placanja}
               </p>
-              {user?.role === "djelatnik" && detalj.status === "NOVA" && (
+              {detalj.status === "CEKA_ADMIN" && (
                 <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.75rem" }}>
                   <button
                     type="button"
-                    className="btn"
-                    disabled={potvrdaUcitavanje}
-                    onClick={() => void promijeniStatus("POTVRDJENA")}
+                    className="btn btn-sekundarni"
+                    disabled={radnjaUcitavanje}
+                    onClick={() => void odluka("NA_DORADI")}
                   >
-                    {potvrdaUcitavanje ? "…" : "Potvrdi narudžbu"}
+                    Vrati kupcu na doradu
                   </button>
                   <button
                     type="button"
-                    className="btn btn-sekundarni"
-                    disabled={potvrdaUcitavanje}
-                    onClick={() => void promijeniStatus("CEKA_ADMIN")}
+                    className="btn"
+                    disabled={radnjaUcitavanje}
+                    onClick={() => void odluka("OTKAZANA")}
                   >
-                    Adresa problematična → admin
+                    Otkaži narudžbu
                   </button>
                 </div>
               )}
-              {user?.role === "kupac" &&
-                detalj.kupac_korisnik_id === user.korisnik_id &&
-                detalj.status === "NA_DORADI" && (
-                  <form className="forma-blok" onSubmit={(e) => void posaljiIspravak(e)} style={{ marginTop: "0.75rem" }}>
-                    <h3>Ispravak narudžbe</h3>
-                    <p className="hint">
-                      Administrator je vratio narudžbu na doradu. Ispravite adresu (ulica, broj, mjesto) i pošaljite
-                      ponovno na pregled djelatnika.
-                    </p>
-                    <label>
-                      Adresa dostave
-                      <input
-                        value={ispravakAdresa}
-                        onChange={(e) => setIspravakAdresa(e.target.value)}
-                        required
-                      />
-                    </label>
-                    <label>
-                      Način plaćanja
-                      <select value={ispravakNacin} onChange={(e) => setIspravakNacin(e.target.value)}>
-                        {NACINI.map((x) => (
-                          <option key={x.v} value={x.v}>
-                            {x.l}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <button type="submit" className="btn" disabled={ispravakUcitavanje}>
-                      {ispravakUcitavanje ? "Slanje…" : "Pošalji ispravak (→ Nova)"}
-                    </button>
-                  </form>
-                )}
-              <p className="hint" style={{ marginBottom: 0 }}>
-                {user?.role === "kupac" && detalj.kupac_korisnik_id === user.korisnik_id
-                  ? detalj.status === "NA_DORADI"
-                    ? "Ispravite podatke i pošaljite narudžbu ponovno djelatniku."
-                    : "Pregled vaše narudžbe. Promjene statusa obavlja djelatnik ili administrator."
-                  : user?.role === "djelatnik"
-                    ? "Pregledajte novu narudžbu: potvrdite je ili eskalirajte administratoru ako adresa izgleda neispravno."
-                    : "Zaglavlje je samo za pregled."}
-              </p>
             </div>
-
             <h3>Stavke</h3>
             <div className="table-wrap">
               <table className="tablica">
                 <thead>
                   <tr>
-                    <th>#</th>
                     <th>Jedinica</th>
                     <th>Kol.</th>
                     <th>Cijena</th>
@@ -298,7 +214,6 @@ export default function NarudzbePage() {
                 <tbody>
                   {detalj.stavke.map((s) => (
                     <tr key={s.stavka_id}>
-                      <td>{s.stavka_id}</td>
                       <td>
                         #{s.jedinica_id} · {s.bicikl_inventarni_broj ?? "?"} · {s.bicikl_naziv ?? "?"}
                       </td>
